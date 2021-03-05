@@ -31,15 +31,13 @@ contract EtherRent is ERC20{
 
     constructor() ERC20("RentToken", "RTT"){
         owner=msg.sender;
-        buyPrice=100 wei;
-        _mint(owner, 10000000);
+        buyPrice=1000 wei;
+        _mint(owner, 1000000000000000000);
     } 
 
     function BuyTokens() public payable{
-        uint tokens = msg.value.mul(buyPrice);
+        uint tokens = msg.value.div(buyPrice);
         require(balanceOf(owner)>=tokens, "There are not so many tokens in supply");
-        uint comission = msg.value.div(100);
-        require(payable(address(this)).send(comission));
         _transfer(owner, msg.sender, tokens);
     }
 

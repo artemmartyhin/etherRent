@@ -46,11 +46,16 @@ describe('Testset for EtherRent', ()=>{
             expect((await token.balanceOf(user2)).toNumber()).to.equal(0);
         });
         it('Must recieve ether', async()=>{
-            token.BuyTokens({value: web3.utils.toWei('2', 'ether')});
-            let actualBalance = web3.eth.getBalance(token.address);
-            let expectedBalance = web3.utils.toWei('2', 'ether');
+            await token.BuyTokens({value: web3.utils.toWei('2', 'ether')});
+            let actualBalance = await web3.eth.getBalance(token.address);
+            let expectedBalance = await web3.utils.toWei('2', 'ether');
+            
             await assert.deepEqual(actualBalance, expectedBalance, "Balance incorrect!");
         });
+        it('Must sell required amount of tokens', async()=>{
+            await token.BuyTokens({from: user1, value: web3.utils.toWei('2', 'ether')});
+            expect((await token.balanceOf(user1)).toNumber()).to.equal(2000000000000000);
+        })
     })
 });
 
