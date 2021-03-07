@@ -8,7 +8,12 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./EtherRent.sol";
 
 contract MutisigSender is Context, ReentrancyGuard{
-    //TODO: add events, more view functions
+
+    //TODO: add events
+
+    event TxExecuted(uint256 indexed txId);
+    event TxExecutionFailed(uint256 indexed txId);
+
     using SafeMath for uint;
     //CONSTANTS
     uint constant MAX_SIGNERS=12;
@@ -92,6 +97,7 @@ contract MutisigSender is Context, ReentrancyGuard{
         }
         txCounter=0;
     }
+
     //@dev functions return deposited ether
     function returnDeposit(address payable _sender, uint _amount) external MultisigOnly SignerOnly(_sender){
         require(address(this).balance>=_amount, "Not enough ether to return");
@@ -111,28 +117,32 @@ contract MutisigSender is Context, ReentrancyGuard{
         txCounter.add(1);
         confirmTx(_txId);
     }
+
     function confirmTx(uint _txId) public 
     SignerOnly(_msgSender()) TxExists(_txId) isNotConfirmed(_txId, _msgSender()){
         confirmations[_txId][_msgSender()]=true;
         executeTx(_txId);
     }
+
     function executeTx(uint _txId) internal isNotExecuted(_txId){
         if(isConfirmed(_txId)){
             if(external_call(_txId)){
-
+                emit TxExecuted(_txId);
+            }
+            else{
+                emit TxExecutionFailed(_txId);
             }
         }
-        else{
-
-        }
+        
     }
+
     function external_call(uint _txId) internal nonReentrant() returns (bool result) {
-        Tx storage _tx= txes[_txId];
-        EtherRent er = EtherRent(_tx.to);
-        uint amount = _tx.amount;
+        EtherRent er = EtherRent(txes[_txId].to);
+        uint amount = txes[_txId].amount;
         er.BuyTokens{value:amount}();
         return result;
     }
+
     function isConfirmed(uint _txId) public view returns(bool result){
         if(txes[_txId].executed){
             return true;
@@ -149,4 +159,5 @@ contract MutisigSender is Context, ReentrancyGuard{
         return false;
     }
 
+    //TODO: add more view functions
 }
